@@ -55,9 +55,6 @@ public:
     writer_guid_.second = uniform_dist(e1);
 
     DDS::StringSeq args;
-    args.length(2);
-    args[0] = DDS::string_dup(std::to_string(writer_guid_.first).c_str());
-    args[1] = DDS::string_dup(std::to_string(writer_guid_.second).c_str());
 
     DDS::ReturnCode_t status;
     DDS::TopicQos default_topic_qos;
@@ -129,6 +126,10 @@ public:
       estr = "DomainParticipant::create_topic: failed for response";
       goto fail;
     }
+
+    args.length(2);
+    args[0] = DDS::string_dup(std::to_string(writer_guid_.first).c_str());
+    args[1] = DDS::string_dup(std::to_string(writer_guid_.second).c_str());
 
     // Let OpenSplice do any needed encoding
     content_filtered_response_topic_ = participant_->create_contentfilteredtopic(
