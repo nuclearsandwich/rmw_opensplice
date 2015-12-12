@@ -65,11 +65,21 @@ take(
     RMW_SET_ERROR_MSG("callbacks handle is null");
     return RMW_RET_ERROR;
   }
+  DDS::SampleInfoSeq * sample_infos = subscriber_info->sample_infos;
+  if (!sample_infos) {
+    RMW_SET_ERROR_MSG("sample info sequence is null");
+    return RMW_RET_ERROR;
+  }
+  void * dds_messages = subscriber_info->dds_messages;
+  if (!dds_messages) {
+    RMW_SET_ERROR_MSG("DDS message sequence is null");
+    return RMW_RET_ERROR;
+  }
 
   const char * error_string = callbacks->take(
     topic_reader,
     subscriber_info->ignore_local_publications,
-    ros_message, taken, sending_publication_handle);
+    ros_message, taken, sending_publication_handle, sample_infos, dds_messages);
   // If no data was taken, that's not captured as an error here, but instead taken is set to false.
   if (error_string) {
     RMW_SET_ERROR_MSG((std::string("failed to take: ") + error_string).c_str());

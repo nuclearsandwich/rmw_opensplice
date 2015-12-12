@@ -115,6 +115,19 @@ register_type__@(spec.base_type.type)(
 }
 
 ROSIDL_TYPESUPPORT_OPENSPLICE_CPP_EXPORT_@(spec.base_type.pkg_name)
+const char * (*initialize_message_sequence)(void * untyped_dds_messages, size_t max_samples)
+{
+  @(__dds_msg_type_prefix)Seq * dds_messages = static_cast<@(__dds_msg_type_prefix)Seq *>(
+    untyped_dds_messages);
+  dds_messages = new @(__dds_msg_type_prefix)Seq(max_samples);
+  if (!dds_messages) {
+    return "@(__dds_msg_type_prefix)Seq: failed to allocate sequence";
+  }
+  return nullptr;
+}
+
+
+ROSIDL_TYPESUPPORT_OPENSPLICE_CPP_EXPORT_@(spec.base_type.pkg_name)
 void
 convert_ros_message_to_dds(const __ros_msg_type & ros_message, __dds_msg_type & dds_message)
 {
@@ -254,7 +267,9 @@ take__@(spec.base_type.type)(
   bool ignore_local_publications,
   void * untyped_ros_message,
   bool * taken,
-  void * sending_publication_handle)
+  void * sending_publication_handle,
+  void * untyped_sample_infos,
+  void * untyped_dds_messages)
 {
   if (untyped_ros_message == 0) {
     return "invalid ros message pointer";
@@ -265,8 +280,11 @@ take__@(spec.base_type.type)(
   @(__dds_msg_type_prefix)DataReader * data_reader =
     @(__dds_msg_type_prefix)DataReader::_narrow(topic_reader);
 
-  @(__dds_msg_type_prefix)Seq dds_messages;
-  DDS::SampleInfoSeq sample_infos;
+  // TODO Preallocate these sequences
+  //@(__dds_msg_type_prefix)Seq dds_messages;
+  DDS::SampleInfoSeq * sample_infos = static_cast<DDS::SampleInfoSeq*>(untyped_sample_infos);
+  @(__dds_msg_type_prefix)Seq * dds_messages = static_cast<@(__dds_msg_type_prefix)Seq*>(untyped_dds_messages);
+
   DDS::ReturnCode_t status = data_reader->take(
     dds_messages,
     sample_infos,
@@ -379,6 +397,7 @@ static message_type_support_callbacks_t callbacks = {
   "@(spec.base_type.pkg_name)",
   "@(spec.base_type.type)",
   &register_type__@(spec.base_type.type),
+  &initialize_message_sequence__@(spec.base_type.type),
   &publish__@(spec.base_type.type),
   &take__@(spec.base_type.type)
 };

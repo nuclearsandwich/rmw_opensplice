@@ -102,6 +102,7 @@ rmw_create_subscription(
     return nullptr;
   }
 
+
   // Past this point, a failure results in unrolling code in the goto fail block.
   rmw_subscription_t * subscription = nullptr;
   DDS::Subscriber * dds_subscriber = nullptr;
@@ -110,8 +111,12 @@ rmw_create_subscription(
   DDS::DataReaderQos datareader_qos;
   DDS::DataReader * topic_reader = nullptr;
   DDS::ReadCondition * read_condition = nullptr;
+  DDS::SampleInfoSeq * sample_infos;
+  DDS::Long max_samples_per_instance;
+
   void * buf = nullptr;
   OpenSpliceStaticSubscriberInfo * subscriber_info = nullptr;
+
   // Begin initializing elements.
   subscription = rmw_subscription_allocate();
   if (!subscription) {
@@ -140,6 +145,12 @@ rmw_create_subscription(
   if (!get_datareader_qos(dds_subscriber, *qos_profile, datareader_qos)) {
     goto fail;
   }
+  max_samples_per_instance = datareader_qos.ResourceLimitsQosPolicy.max_samples_per_instance;
+  error_string = callbacks->initialize_message_sequence(subscriber_info->dds_messages, max_samples_per_instance);
+  if (error_string) {
+    RMW_SET_ERROR_MSG((std::string("failed to register the type: ") + error_string).c_str());
+    return nullptr;
+  }
 
   topic_reader = dds_subscriber->create_datareader(
     topic, datareader_qos, NULL, DDS::STATUS_MASK_NONE);
@@ -154,6 +165,14 @@ rmw_create_subscription(
     RMW_SET_ERROR_MSG("failed to create read condition");
     goto fail;
   }
+
+  sample_infos = rmw_allocate(sizeof(DDS::SampleInfoSeq);
+
+  // Get max_samples_per_instance
+
+  RMW_TRY_PLACEMENT_NEW(
+    sample_infos, sample_infos, goto fail, DDS::SampleInfoSeq,
+    max_samples_per_instance)
 
   // Allocate memory for the OpenSpliceStaticSubscriberInfo object.
   buf = rmw_allocate(sizeof(OpenSpliceStaticSubscriberInfo));
@@ -170,6 +189,7 @@ rmw_create_subscription(
   subscriber_info->read_condition = read_condition;
   subscriber_info->callbacks = callbacks;
   subscriber_info->ignore_local_publications = ignore_local_publications;
+  subscriber_info->sample_infos = sample_infos;
 
   subscription->implementation_identifier = opensplice_cpp_identifier;
   subscription->data = subscriber_info;

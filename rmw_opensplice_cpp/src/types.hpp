@@ -122,6 +122,11 @@ struct OpenSpliceStaticSubscriberInfo
   DDS::Subscriber * dds_subscriber;
   DDS::DataReader * topic_reader;
   DDS::ReadCondition * read_condition;
+  // Preallocate some state needed by the implementation of rmw_take
+  DDS::SampleInfoSeq * sample_infos;
+  // dds_messages: a Sequence of the DDS message type
+  void * dds_messages;
+
   const message_type_support_callbacks_t * callbacks;
   bool ignore_local_publications;
 };
