@@ -145,8 +145,6 @@ rmw_create_subscription(
   if (!get_datareader_qos(dds_subscriber, *qos_profile, datareader_qos)) {
     goto fail;
   }
-  max_samples_per_instance = datareader_qos.ResourceLimitsQosPolicy.max_samples_per_instance;
-  error_string = callbacks->initialize_message_sequence(subscriber_info->dds_messages, max_samples_per_instance);
   if (error_string) {
     RMW_SET_ERROR_MSG((std::string("failed to register the type: ") + error_string).c_str());
     return nullptr;
@@ -166,7 +164,7 @@ rmw_create_subscription(
     goto fail;
   }
 
-  sample_infos = rmw_allocate(sizeof(DDS::SampleInfoSeq);
+  sample_infos = static_cast<DDS::SampleInfoSeq*>(rmw_allocate(sizeof(DDS::SampleInfoSeq)));
 
   // Get max_samples_per_instance
 
@@ -175,7 +173,7 @@ rmw_create_subscription(
     max_samples_per_instance)
 
   // Allocate memory for the OpenSpliceStaticSubscriberInfo object.
-  buf = rmw_allocate(sizeof(OpenSpliceStaticSubscriberInfo));
+  buf = static_cast<OpenSpliceStaticSubscriberInfo*>(rmw_allocate(sizeof(OpenSpliceStaticSubscriberInfo)));
   if (!buf) {
     RMW_SET_ERROR_MSG("failed to allocate memory");
     goto fail;
@@ -183,6 +181,12 @@ rmw_create_subscription(
   // Use a placement new to construct the instance in the preallocated buffer.
   RMW_TRY_PLACEMENT_NEW(subscriber_info, buf, goto fail, OpenSpliceStaticSubscriberInfo)
   buf = nullptr;  // Only free the subscriber_info pointer; don't need the buf pointer anymore.
+
+
+  max_samples_per_instance = datareader_qos.resource_limits.max_samples_per_instance;
+  error_string = callbacks->initialize_message_sequence(
+    subscriber_info->dds_messages, max_samples_per_instance);
+
   subscriber_info->dds_topic = topic;
   subscriber_info->dds_subscriber = dds_subscriber;
   subscriber_info->topic_reader = topic_reader;

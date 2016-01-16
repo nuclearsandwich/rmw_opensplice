@@ -115,7 +115,8 @@ register_type__@(spec.base_type.type)(
 }
 
 ROSIDL_TYPESUPPORT_OPENSPLICE_CPP_EXPORT_@(spec.base_type.pkg_name)
-const char * (*initialize_message_sequence)(void * untyped_dds_messages, size_t max_samples)
+const char * initialize_message_sequence__@(spec.base_type.type)(
+  void * untyped_dds_messages, size_t max_samples)
 {
   @(__dds_msg_type_prefix)Seq * dds_messages = static_cast<@(__dds_msg_type_prefix)Seq *>(
     untyped_dds_messages);
@@ -286,8 +287,8 @@ take__@(spec.base_type.type)(
   @(__dds_msg_type_prefix)Seq * dds_messages = static_cast<@(__dds_msg_type_prefix)Seq*>(untyped_dds_messages);
 
   DDS::ReturnCode_t status = data_reader->take(
-    dds_messages,
-    sample_infos,
+    *dds_messages,
+    *sample_infos,
     1,
     DDS::ANY_SAMPLE_STATE,
     DDS::ANY_VIEW_STATE,
@@ -332,7 +333,7 @@ take__@(spec.base_type.type)(
   }
 
   {
-    DDS::SampleInfo & sample_info = sample_infos[0];
+    DDS::SampleInfo & sample_info = (*sample_infos)[0];
     if (!sample_info.valid_data) {
       // skip sample without data
       ignore_sample = true;
@@ -355,7 +356,7 @@ take__@(spec.base_type.type)(
 
   if (!ignore_sample) {
     __ros_msg_type & ros_message = *(__ros_msg_type *)untyped_ros_message;
-    convert_dds_message_to_ros(dds_messages[0], ros_message);
+    convert_dds_message_to_ros((*dds_messages)[0], ros_message);
     *taken = true;
   } else {
     *taken = false;
@@ -363,7 +364,7 @@ take__@(spec.base_type.type)(
 
 finally:
   // Ensure the loan is returned.
-  status = data_reader->return_loan(dds_messages, sample_infos);
+  status = data_reader->return_loan(*dds_messages, *sample_infos);
   switch (status) {
     case DDS::RETCODE_ERROR:
       return "@(__dds_msg_type_prefix)DataReader.return_loan: "
