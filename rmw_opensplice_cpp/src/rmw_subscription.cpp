@@ -112,7 +112,7 @@ rmw_create_subscription(
   DDS::DataReader * topic_reader = nullptr;
   DDS::ReadCondition * read_condition = nullptr;
   DDS::SampleInfoSeq * sample_infos;
-  DDS::Long max_samples_per_instance;
+  DDS::Long max_samples_per_instance = 10;
 
   void * buf = nullptr;
   OpenSpliceStaticSubscriberInfo * subscriber_info = nullptr;
@@ -183,9 +183,21 @@ rmw_create_subscription(
   buf = nullptr;  // Only free the subscriber_info pointer; don't need the buf pointer anymore.
 
 
-  max_samples_per_instance = datareader_qos.resource_limits.max_samples_per_instance;
+  //max_samples_per_instance = datareader_qos.resource_limits.max_samples_per_instance;
+  if (datareader_qos.history.kind == DDS::KEEP_LAST_HISTORY_QOS) {
+    max_samples_per_instance = datareader_qos.history.depth;
+  }
+
   error_string = callbacks->initialize_message_sequence(
     subscriber_info->dds_messages, max_samples_per_instance);
+  if (error_string != nullptr) {
+    RMW_SET_ERROR_MSG(error_string);
+    goto fail;
+  }
+  if (!subscriber_info->dds_messages) {
+    RMW_SET_ERROR_MSG("failed to allocate DDS seq");
+    goto fail;
+  }
 
   subscriber_info->dds_topic = topic;
   subscriber_info->dds_subscriber = dds_subscriber;

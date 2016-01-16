@@ -17,6 +17,9 @@
 
 #include <u_instanceHandle.h>
 
+#include <rmw/allocators.h>
+#include "rmw/impl/cpp/macros.hpp"
+
 #include <rosidl_generator_c/message_type_support.h>
 // this is defined in the rosidl_typesupport_opensplice_cpp package and
 // is in the include/rosidl_typesupport_opensplice_cpp/impl folder
@@ -116,12 +119,17 @@ register_type__@(spec.base_type.type)(
 
 ROSIDL_TYPESUPPORT_OPENSPLICE_CPP_EXPORT_@(spec.base_type.pkg_name)
 const char * initialize_message_sequence__@(spec.base_type.type)(
-  void * untyped_dds_messages, size_t max_samples)
+  void * & untyped_dds_messages, size_t max_samples)
 {
-  @(__dds_msg_type_prefix)Seq * dds_messages = static_cast<@(__dds_msg_type_prefix)Seq *>(
-    untyped_dds_messages);
-  dds_messages = new @(__dds_msg_type_prefix)Seq(max_samples);
-  if (!dds_messages) {
+  untyped_dds_messages = rmw_allocate(sizeof(@(__dds_msg_type_prefix)Seq));
+  RMW_TRY_PLACEMENT_NEW(
+    untyped_dds_messages, untyped_dds_messages,
+    return "@(__dds_msg_type_prefix)Seq: failed to allocate sequence",
+    @(__dds_msg_type_prefix)Seq,
+    max_samples
+  )
+  //untyped_dds_messages = static_cast<void *>(new @(__dds_msg_type_prefix)Seq(max_samples));
+  if (!untyped_dds_messages) {
     return "@(__dds_msg_type_prefix)Seq: failed to allocate sequence";
   }
   return nullptr;

@@ -28,7 +28,7 @@ typedef struct message_type_support_callbacks_t
   // Function to initialize the sequence of DDS messages to pass to take.
   // Preallocates dds_messages if applicable
   // Returns NULL if initialization was successful, otherwise an error string.
-  const char * (*initialize_message_sequence)(void * dds_messages, size_t max_samples);
+  const char * (*initialize_message_sequence)(void * & dds_messages, size_t max_samples);
   // Function to publish a ROS message with a given DDS data_writer
   // Returns NULL if the publish was successful, otherwise an error string.
   const char * (*publish)(
