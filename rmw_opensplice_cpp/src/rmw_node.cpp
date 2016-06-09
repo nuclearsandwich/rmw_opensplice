@@ -128,13 +128,12 @@ rmw_create_node(const char * name, size_t domain_id)
   DDS::DataReader * data_reader = nullptr;
   DDS::PublicationBuiltinTopicDataDataReader * builtin_publication_datareader = nullptr;
   DDS::SubscriptionBuiltinTopicDataDataReader * builtin_subscription_datareader = nullptr;
-  /*
+
   DDS::Subscriber * builtin_subscriber = participant->get_builtin_subscriber();
   if (!builtin_subscriber) {
     RMW_SET_ERROR_MSG("builtin subscriber handle is null");
     goto fail;
   }
-  */
 
   graph_guard_condition = rmw_create_guard_condition();
   if (!graph_guard_condition) {
@@ -142,7 +141,6 @@ rmw_create_node(const char * name, size_t domain_id)
     goto fail;
   }
 
-  /*
   // setup publisher listener
   data_reader = builtin_subscriber->lookup_datareader("DCPSPublication");
   builtin_publication_datareader =
@@ -180,7 +178,7 @@ rmw_create_node(const char * name, size_t domain_id)
     subscriber_listener, buf, goto fail, CustomSubscriberListener, graph_guard_condition)
   buf = nullptr;
   builtin_subscription_datareader->set_listener(subscriber_listener, DDS::DATA_AVAILABLE_STATUS);
-  */
+
 
   node = rmw_node_allocate();
   if (!node) {
